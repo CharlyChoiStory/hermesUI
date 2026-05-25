@@ -38,8 +38,8 @@ cat > "$PLIST_PATH" <<PLIST
 
   <key>ProgramArguments</key>
   <array>
-    <string>/bin/bash</string>
-    <string>$APP_DIR/auto-start-hermes-chat-ui.sh</string>
+    <string>$NODE_BIN</string>
+    <string>$APP_DIR/server.js</string>
   </array>
 
   <key>WorkingDirectory</key>
@@ -60,7 +60,7 @@ cat > "$PLIST_PATH" <<PLIST
   <key>EnvironmentVariables</key>
   <dict>
     <key>PATH</key>
-    <string>$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <string>$HOME/.local/bin:$HOME/.nvm/versions/node/default/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     <key>APP_DIR</key>
     <string>$APP_DIR</string>
     <key>NODE_BIN</key>
