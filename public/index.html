@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#17212b" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Hermes Chat" />
+    <title>Hermes Telegram Chat UI</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div id="app-shell" class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-top">
+          <div class="sidebar-top-row">
+            <div>
+              <div class="sidebar-title">Hermes Local Chat</div>
+              <div id="sidebar-subtitle" class="sidebar-subtitle">텔레그램 스타일 · 로컬 브라우저 전용</div>
+            </div>
+            <div class="sidebar-actions">
+              <button id="install-app-btn" class="install-app-btn" type="button" hidden>설치</button>
+              <button id="theme-toggle-btn" class="theme-toggle-btn" type="button" title="라이트 모드로 전환">
+                <svg id="theme-icon-moon" class="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <svg id="theme-icon-sun" class="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" hidden><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+              </button>
+            </div>
+          </div>
+          <button id="new-chat-btn" class="new-chat-btn" type="button">+ 새 채팅</button>
+        </div>
+
+        <div id="thread-list" class="thread-list"></div>
+
+        <div class="sidebar-footer">
+          <div id="sidebar-footer-mode">서버: 로컬 브라우저 전용</div>
+          <div>파일 업로드 + 스트리밍 + 슬래시 명령 지원</div>
+        </div>
+      </aside>
+
+      <div
+        id="sidebar-resizer"
+        class="sidebar-resizer"
+        role="separator"
+        aria-label="왼쪽 채팅 목록 너비 조절"
+        aria-orientation="vertical"
+      ></div>
+
+      <main class="chat-panel">
+        <div class="chat-main">
+          <header class="chat-header">
+            <div>
+              <div id="chat-title" class="chat-title">새 채팅</div>
+              <div id="chat-subtitle" class="chat-subtitle">session_id 없음</div>
+            </div>
+            <div id="chat-header-badge" class="chat-header-badge">local</div>
+          </header>
+
+          <section id="message-list" class="message-list">
+            <div class="empty-state">
+              <div class="empty-title">Hermes 웹 채팅 준비 완료</div>
+              <div class="empty-desc">파일 업로드와 /help 명령을 바로 사용할 수 있습니다.</div>
+            </div>
+          </section>
+
+          <footer class="composer-wrap">
+            <div id="status-line" class="status-line">대기 중</div>
+
+            <div id="pending-files" class="pending-files" hidden></div>
+
+            <form id="composer-form" class="composer-form">
+              <div class="composer-main">
+                <textarea
+                  id="message-input"
+                  class="message-input"
+                  placeholder="메시지를 입력하세요. Enter 전송 · Shift+Enter 줄바꿈 · /help 명령 목록"
+                  rows="1"
+                ></textarea>
+
+                <div class="composer-toolbar">
+                  <div class="composer-hint">지원: /help /new /reset /clear /status /title /sessions /resume</div>
+                  <div class="composer-actions">
+                    <input id="file-input" type="file" multiple hidden />
+                    <button id="attach-btn" class="attach-btn" type="button">파일</button>
+                    <button id="stop-btn" class="stop-btn" type="button" hidden>중단</button>
+                    <button id="send-btn" class="send-btn" type="submit">전송</button>
+                  </div>
+                </div>
+              </div>
+            </form>
+          </footer>
+        </div>
+
+        <div id="exec-panel" class="exec-panel" hidden>
+          <div class="exec-panel-head">
+            <span class="exec-panel-label">실행 현황</span>
+            <span id="exec-status-badge" class="exec-status-badge"></span>
+            <span id="exec-elapsed" class="exec-elapsed">00:00</span>
+          </div>
+          <div class="exec-preview-wrap">
+            <div class="exec-preview-title">실시간 응답</div>
+            <div id="exec-preview" class="exec-preview"></div>
+          </div>
+          <div id="exec-steps" class="exec-steps"></div>
+        </div>
+      </main>
+    </div>
+
+    <template id="message-template">
+      <article class="message-row">
+        <div class="avatar"></div>
+        <div class="message-bubble-wrap">
+          <div class="message-meta"></div>
+          <div class="message-bubble">
+            <div class="message-text"></div>
+            <div class="message-attachments"></div>
+          </div>
+        </div>
+      </article>
+    </template>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>

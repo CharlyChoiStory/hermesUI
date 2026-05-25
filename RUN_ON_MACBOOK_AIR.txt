@@ -1,0 +1,42 @@
+Hermes Telegram Chat UI - macOS 실행 방법
+
+1) 준비
+- Hermes 설치 확인
+  hermes --version
+- Node.js 설치 확인
+  node --version
+
+2) 실행 방법 A: 더블클릭
+- start-hermes-chat-ui.command 파일을 더블클릭
+- 터미널 창이 열리며 서버가 시작됨
+- 브라우저에서 아래 주소 열기
+  http://127.0.0.1:8793
+
+3) 실행 방법 B: 터미널에서 직접 실행
+- 이 폴더로 이동
+  cd hermes-telegram-chat-ui
+- 실행
+  npm start
+- 브라우저 주소
+  http://127.0.0.1:8793
+
+4) 포트 변경 예시
+- 기본 포트는 8793
+- 다른 포트로 실행하려면
+  PORT=8794 npm start
+- 브라우저 주소
+  http://127.0.0.1:8794
+
+5) HOST 관련
+- 기본값은 로컬 전용 127.0.0.1
+- https가 아니라 http 입니다.
+- https://localhost:8793 로 열면 현재 설정에서는 동작하지 않습니다.
+
+6) 같은 와이파이 다른 기기에서도 열고 싶으면
+- 실행 시 HOST=0.0.0.0 및 ALLOW_LAN=1 사용
+  HOST=0.0.0.0 ALLOW_LAN=1 npm start
+- 그 후 같은 와이파이에서
+  http://맥의로컬IP:8793
+
+7) 중지
+- 서버 실행 터미널 창에서 Control+C
