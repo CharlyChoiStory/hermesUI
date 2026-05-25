@@ -4,7 +4,9 @@ set -euo pipefail
 APP_DIR="$(cd "$(dirname "$0")" && pwd)"
 LAUNCH_AGENTS_DIR="$HOME/Library/LaunchAgents"
 LABEL="local.hermes.chat-ui"
+OLD_LABEL="com.charlychoi.hermes-chat"
 PLIST_PATH="$LAUNCH_AGENTS_DIR/$LABEL.plist"
+OLD_PLIST_PATH="$LAUNCH_AGENTS_DIR/$OLD_LABEL.plist"
 USER_ID="$(id -u)"
 NODE_BIN="$(command -v node || true)"
 PORT="${PORT:-8793}"
@@ -17,6 +19,12 @@ if [ -z "$NODE_BIN" ]; then
   echo "[오류] Node.js를 찾지 못했습니다. 먼저 node --version 이 동작하는지 확인하세요."
   read -r -p "엔터를 누르면 닫습니다..." _
   exit 1
+fi
+
+launchctl bootout "gui/$USER_ID/$OLD_LABEL" >/dev/null 2>&1 || true
+if [ -f "$OLD_PLIST_PATH" ]; then
+  mv "$OLD_PLIST_PATH" "$OLD_PLIST_PATH.disabled" \
+    || echo "[경고] 기존 자동 실행 항목을 비활성화하지 못했습니다: $OLD_PLIST_PATH"
 fi
 
 cat > "$PLIST_PATH" <<PLIST
@@ -65,6 +73,8 @@ cat > "$PLIST_PATH" <<PLIST
     <string>0</string>
     <key>HERMES_TIMEOUT_MS</key>
     <string>1800000</string>
+    <key>HERMES_HOME</key>
+    <string>$HOME/.hermes</string>
   </dict>
 </dict>
 </plist>

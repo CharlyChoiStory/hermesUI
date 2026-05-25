@@ -11,6 +11,7 @@ const HOST = process.env.HOST || '127.0.0.1';
 const PORT = Number(process.env.PORT || 8793);
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
+const DEFAULT_HERMES_HOME = path.join(os.homedir(), '.hermes');
 const MAX_BODY_BYTES = 25 * 1024 * 1024;
 const MAX_ATTACHMENTS = 5;
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
@@ -103,6 +104,26 @@ function sendNdjsonEvent(res, payload) {
 
 async function ensureUploadDir() {
   await fsp.mkdir(UPLOAD_DIR, { recursive: true });
+}
+
+async function ensureHermesLogWritable() {
+  const hermesHome = process.env.HERMES_HOME || DEFAULT_HERMES_HOME;
+  const logsDir = path.join(hermesHome, 'logs');
+  const agentLog = path.join(logsDir, 'agent.log');
+
+  try {
+    await fsp.mkdir(logsDir, { recursive: true, mode: 0o700 });
+    await fsp.appendFile(agentLog, '');
+    return { hermesHome, agentLog };
+  } catch (error) {
+    const wrapped = new Error(
+      `Hermes 로그 파일에 쓸 수 없습니다: ${agentLog}. `
+      + 'start-hermes-chat-ui.command로 서버를 다시 시작하거나 macOS에서 터미널/실행 앱의 파일 접근 권한을 확인하세요.'
+    );
+    wrapped.statusCode = 500;
+    wrapped.cause = error;
+    throw wrapped;
+  }
 }
 
 async function readJsonBody(req) {
@@ -571,9 +592,12 @@ function startHermesChat({ message, sessionId, attachments, onEvent = null }) {
       args.push('--resume', sessionId);
     }
 
+    const hermesHome = process.env.HERMES_HOME || DEFAULT_HERMES_HOME;
+
     child = spawn('hermes', args, {
       env: {
         ...process.env,
+        HERMES_HOME: hermesHome,
         NO_COLOR: '1',
         TERM: process.env.TERM || 'xterm-256color',
       },
@@ -670,6 +694,18 @@ function startHermesChat({ message, sessionId, attachments, onEvent = null }) {
         return reject(error);
       }
 
+      const initFailMatch = (stdout || '').match(/Failed to initialize agent:\s*(.+)/i);
+      if (initFailMatch) {
+        const cause = initFailMatch[1].trim();
+        const isLogPerm = /logs[\\/]agent\.log/.test(cause) && /errno 1|operation not permitted/i.test(cause);
+        const hint = isLogPerm
+          ? ' — macOS에서 터미널/앱의 파일 접근 권한을 확인하거나 start-hermes-chat-ui.command로 서버를 재시작하세요.'
+          : '';
+        const error = new Error(`Hermes 초기화 실패: ${cause}${hint}`);
+        error.statusCode = 500;
+        return reject(error);
+      }
+
       const parsed = parseHermesOutput(stdout, stderr);
       if (!parsed.reply) {
         const error = new Error(parsed.raw || 'Hermes returned an empty response');
@@ -745,6 +781,7 @@ const server = http.createServer(async (req, res) => {
       lanOnly: ALLOW_LAN,
       lanIPs: ALLOW_LAN ? LAN_IPV4S : [],
       requestTimeoutMs: HERMES_TIMEOUT_MS,
+      hermesHome: process.env.HERMES_HOME || DEFAULT_HERMES_HOME,
       uploads: {
         enabled: true,
         uploadDir: UPLOAD_DIR,
@@ -771,6 +808,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      await ensureHermesLogWritable();
       const result = await runHermesChat({ message, sessionId, attachments });
       sendJson(res, 200, {
         ok: true,
@@ -803,6 +841,7 @@ const server = http.createServer(async (req, res) => {
         return;
       }
 
+      await ensureHermesLogWritable();
       res.writeHead(200, {
         'Content-Type': 'application/x-ndjson; charset=utf-8',
         'Cache-Control': 'no-store',

@@ -9,9 +9,10 @@ PORT="${PORT:-8793}"
 HOST="${HOST:-127.0.0.1}"
 ALLOW_LAN="${ALLOW_LAN:-0}"
 HERMES_TIMEOUT_MS="${HERMES_TIMEOUT_MS:-1800000}"
+HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
 
 export PATH="$HOME/.local/bin:$HOME/.nvm/versions/node/default/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:${PATH:-}"
-export PORT HOST ALLOW_LAN HERMES_TIMEOUT_MS
+export PORT HOST ALLOW_LAN HERMES_TIMEOUT_MS HERMES_HOME
 
 mkdir -p "$LOG_DIR"
 cd "$APP_DIR"
@@ -25,6 +26,13 @@ if ! command -v hermes >/dev/null 2>&1; then
   echo "$(date '+%Y-%m-%d %H:%M:%S') Hermes CLI not found in PATH" >> "$LOG_FILE"
   exit 1
 fi
+
+mkdir -p "$HERMES_HOME/logs"
+chmod 700 "$HERMES_HOME" "$HERMES_HOME/logs" 2>/dev/null || true
+touch "$HERMES_HOME/logs/agent.log" 2>/dev/null || {
+  echo "$(date '+%Y-%m-%d %H:%M:%S') Cannot write Hermes agent log: $HERMES_HOME/logs/agent.log" >> "$LOG_FILE"
+  exit 1
+}
 
 while lsof -nP -iTCP:"$PORT" -sTCP:LISTEN >/dev/null 2>&1; do
   echo "$(date '+%Y-%m-%d %H:%M:%S') Port $PORT is already in use; waiting for it to become available." >> "$LOG_FILE"
