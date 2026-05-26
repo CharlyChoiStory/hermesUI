@@ -326,6 +326,13 @@ body.resizing .sidebar-resizer::before {
   font-weight: 700;
 }
 
+.chat-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .chat-header-badge {
   color: #9ed0ff;
   background: rgba(51, 144, 236, 0.14);
@@ -333,6 +340,58 @@ body.resizing .sidebar-resizer::before {
   border-radius: 999px;
   padding: 7px 12px;
   font-size: 12px;
+}
+
+.server-status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--btn-secondary-bg);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  user-select: none;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+
+.server-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.server-status-indicator.online {
+  border-color: rgba(125, 216, 125, 0.3);
+  background: rgba(125, 216, 125, 0.1);
+}
+
+.server-status-indicator.online .server-status-dot {
+  background: var(--success);
+  box-shadow: 0 0 0 2px rgba(125, 216, 125, 0.25);
+}
+
+.server-status-indicator.online .server-status-label {
+  color: var(--success);
+}
+
+.server-status-indicator.offline {
+  border-color: rgba(255, 123, 114, 0.3);
+  background: rgba(255, 123, 114, 0.1);
+}
+
+.server-status-indicator.offline .server-status-dot {
+  background: var(--danger);
+  box-shadow: 0 0 0 2px rgba(255, 123, 114, 0.25);
+}
+
+.server-status-indicator.offline .server-status-label {
+  color: var(--danger);
 }
 
 .message-list {

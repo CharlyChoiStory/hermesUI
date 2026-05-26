@@ -165,6 +165,7 @@ const els = {
   themeIconMoon: document.getElementById('theme-icon-moon'),
   themeIconSun: document.getElementById('theme-icon-sun'),
   installAppBtn: document.getElementById('install-app-btn'),
+  serverStatusIndicator: document.getElementById('server-status-indicator'),
 };
 
 function applyTheme(theme) {
@@ -500,6 +501,32 @@ function renderInstallControl() {
   if (!els.installAppBtn) return;
   const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
   els.installAppBtn.hidden = standalone || !state.deferredInstallPrompt;
+}
+
+function setServerStatus(status) {
+  const indicator = els.serverStatusIndicator;
+  if (!indicator) return;
+  const label = indicator.querySelector('.server-status-label');
+  indicator.classList.remove('online', 'offline');
+  if (status === 'online') {
+    indicator.classList.add('online');
+    if (label) label.textContent = '온라인';
+  } else if (status === 'offline') {
+    indicator.classList.add('offline');
+    if (label) label.textContent = '오프라인';
+  } else {
+    if (label) label.textContent = '확인 중';
+  }
+}
+
+async function pollServerHealth() {
+  try {
+    const response = await fetch('/api/health', { signal: AbortSignal.timeout(5000) });
+    const data = await response.json().catch(() => ({}));
+    setServerStatus(response.ok && data.ok ? 'online' : 'offline');
+  } catch {
+    setServerStatus('offline');
+  }
 }
 
 function applyHealthMode() {
@@ -1499,12 +1526,16 @@ async function bootstrap() {
     }
     state.health = data;
     applyHealthMode();
+    setServerStatus('online');
     pushActivity(`서버 연결 완료 · timeout ${Math.round((data.requestTimeoutMs || 0) / 60000)}분`, 'ok');
     setStatus('로컬 서버 연결 완료', 'ok');
   } catch {
+    setServerStatus('offline');
     pushActivity('로컬 서버 연결 실패', 'error');
     setStatus('로컬 서버 연결 실패', 'error');
   }
+
+  setInterval(pollServerHealth, 30000);
 }
 
 bootstrap();
